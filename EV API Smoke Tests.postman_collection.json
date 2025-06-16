@@ -1,0 +1,245 @@
+{
+	"info": {
+		"_postman_id": "7c5ae9bc-ae53-4ff9-a48b-4a66e88e78e6",
+		"name": "EV API Smoke Tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "41179762"
+	},
+	"item": [
+		{
+			"name": "1️⃣  Create Vehicle",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Vehicle created (201)\", () => pm.response.to.have.status(201));",
+							"",
+							"const v = pm.response.json();",
+							"pm.expect(v).to.have.property(\"id\").that.is.a(\"number\");",
+							"pm.environment.set(\"vehicleId\", v.id);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"make\": \"TESLA\",\n  \"model\": \"MODEL 3\",\n  \"modelYear\": \"2019\",\n  \"evType\": \"Battery Electric Vehicle (BEV)\",\n  \"cafvEligibility\": \"Clean Alternative Fuel Vehicle Eligible\",\n  \"electricRange\": 220,\n  \"baseMsrp\": 0.00\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/vehicles",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"vehicles"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2️⃣  Create Sale",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Sale created (201)\", () => pm.response.to.have.status(201));",
+							"",
+							"const s = pm.response.json();",
+							"pm.environment.set(\"vin\", s.vin);",
+							"pm.expect(s).to.include.keys(\"vin\", \"vehicleId\", \"county\", \"state\");"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"sale\": {\n        \"county\": \"King\",\n        \"city\": \"Seattle\",\n        \"state\": \"WA\",\n        \"postalCode\": \"98178\",\n        \"legislativeDistrict\": \"37\",\n        \"dolVehicleId\": \"101250425\",\n        \"vehicleLocation\": \"POINT (-122.23825 47.49461)\",\n        \"electricUtility\": \"CITY OF SEATTLE - (WA)|CITY OF TACOMA - (WA)\",\n        \"censusTrack2020\": \"53033011902\",\n        \"vin\": \"5YJ3E1EB6K0000000\"\n    },\n    \"vehicle\": {\n        \"make\": \"TESLA\",\n        \"model\": \"MODEL 3\",\n        \"modelYear\": \"2019\"\n\n    }\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/sales",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"sales"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3️⃣  Lookup Sale by VIN",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Sale fetched (200)\", () => pm.response.to.have.status(200));",
+							"const body = pm.response.json();",
+							"console.log(body)",
+							"",
+							"pm.expect(body.sale.vin).to.eql(pm.environment.get(\"vin\"));",
+							"pm.expect(body.sale.vehicleId).to.eql(+pm.environment.get(\"vehicleId\"));"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/sales?vin={{vin}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"sales"
+					],
+					"query": [
+						{
+							"key": "vin",
+							"value": "{{vin}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update MSRP",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"baseMsrp\": 2000.00\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/vehicles/{{vehicleId}}/msrp",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"vehicles",
+						"{{vehicleId}}",
+						"msrp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3️⃣  Lookup Sale by VIN After Update",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Sale fetched (200)\", () => pm.response.to.have.status(200));",
+							"pm.test(\"msrp updated\", () => {",
+							"  const body = pm.response.json();        // ← parentheses!",
+							"  pm.expect(body.msrp).to.eql(200000000.00);",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/sales?vin={{vin}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"sales"
+					],
+					"query": [
+						{
+							"key": "vin",
+							"value": "{{vin}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET  all vehicles",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status 200', () => pm.response.code === 200);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/vehicles",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"vehicles"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "vehicleId",
+			"value": ""
+		},
+		{
+			"key": "vin",
+			"value": ""
+		}
+	]
+}

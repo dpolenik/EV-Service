@@ -1,0 +1,28 @@
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///evdb;MODE=PostgreSQL
+    username: sa
+    password:
+
+  sql:
+    init:
+        schema-locations: schema-postgres.sql
+        mode: always   # run every startup
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterAccess=10m
+
+management:
+  observations:
+    annotations:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+logging:
+  level:
+    web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
